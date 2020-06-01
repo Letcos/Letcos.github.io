@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title> linux_module机制 | Letcos</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://e.coding.net/letcos/Blog.git/favicon.ico?v=1591029645168">
+<link rel="stylesheet" href="https://e.coding.net/letcos/Blog.git/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="模块相关指令
+指令介绍
+modinfo
+功能：静态查看模块文件的基本信息，不需要安装到内核中即可查看。
+语法：modinfo 模块名
+测试：
+[root@localhost char]# modinfo tiny4412_hello_mod..." />
+    <meta name="keywords" content="Android" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://e.coding.net/letcos/Blog.git">
+        <img src="https://e.coding.net/letcos/Blog.git/images/avatar.png?v=1591029645168" class="site-logo">
+        <h1 class="site-title">Letcos</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://letcos.github.io/" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+          <a class="social-link" href="https://www.zhihu.com/people/li-xing-le-guan-pai-16/posts" target="_blank">
+            <i class="fab fa-zhihu"></i>
+          </a>
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      永远进步，永远热泪盈眶
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">letcos</a> | <a class="rss" href="https://e.coding.net/letcos/Blog.git/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title"> linux_module机制</h2>
+            <div class="post-date">2020-01-23</div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="模块相关指令">模块相关指令</h1>
+<h2 id="指令介绍">指令介绍</h2>
+<h3 id="modinfo">modinfo</h3>
+<p>功能：静态查看模块文件的基本信息，不需要安装到内核中即可查看。</p>
+<p>语法：modinfo 模块名</p>
+<p>测试：</p>
+<pre><code>[root@localhost char]# modinfo tiny4412_hello_module.ko 
+filename:       tiny4412_hello_module.ko
+license:        GPL
+depends:        
+intree:         Y
+vermagic:       3.5.0-FriendlyARM SMP preempt mod_unload ARMv7 p2v8 
+</code></pre>
+<p>modinfo 命令依赖 /lib/modules/内核版本号/modules.dep 文件，如果没有会执行失败，在开发板上执行这个命令时候就需要创建这个文件</p>
+<h3 id="lsmod">lsmod</h3>
+<p>功能：查看已经安装到内核的模块列表信息<br>
+语法：lsmod</p>
+<pre><code>//先安装一个内核模块，再查看当前安装的模块数量
+[root@localhost home]# insmod tiny4412_hello_module.ko 
+[ 1046.285000] Hello, Tiny4412 module is installed !
+[root@localhost home]# lsmod 
+    Not tainted
+tiny4412_hello_module 648 0 - Live 0xbf000000 //安装的模块
+
+//卸载模块，再次查看当前模块信息
+[root@localhost home]# rmmod tiny4412_hello_module.ko 
+[ 1063.180000] Good-bye, Tiny4412 module was removed!
+[root@localhost home]# lsmod 
+    Not tainted
+</code></pre>
+<h3 id="insmod">insmod</h3>
+<p>功能：安装一个模块文件到Linux系统中。<br>
+语法：insmod 内核模块名.ko</p>
+<h3 id="rmmod">rmmod</h3>
+<p>功能：从内核中卸载一个已经安装的内核模块。</p>
+<p>语法：rmod 内核模块名.ko</p>
+<h3 id="modprobe">modprobe</h3>
+<p>功能：从内核安装或卸载一个模块</p>
+<p>语法：参考 man modprobe</p>
+<h2 id="系统模块调用">系统模块调用</h2>
+<h3 id="初始化模块-init_module">初始化模块 init_module</h3>
+<pre><code class="language-c">SYSCALL_DEFINE3(init_module, void __user *, umod,
+		unsigned long, len, const char __user *, uargs)
+{
+	int err;
+	struct load_info info = { };
+	//判断权限及是否启用模块功能
+	err = may_init_module();
+	if (err)	if (mod-&gt;init != NULL)
+		ret = do_one_initcall(mod-&gt;init);
+		return err;
+
+	pr_debug(&quot;init_module: umod=%p, len=%lu, uargs=%p\n&quot;,
+	       umod, len, uargs);
+	//从用户空间拷贝模块到内核
+	err = copy_module_from_user(umod, len, &amp;info);
+	if (err)
+		return err;
+	//检查，校验，分配空间，加载，连接模块等操作
+	return load_module(&amp;info, uargs, 0);
+}
+load_module
+----&gt;do_init_module(struct module *mod)
+{
+    ...
+    /*执行初始化函数*/
+    if (mod-&gt;init != NULL)
+		ret = do_one_initcall(mod-&gt;init);
+    ...
+}
+</code></pre>
+<h3 id="删除模块-delete_module">删除模块 delete_module</h3>
+<pre><code class="language-c">SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
+		unsigned int, flags)
+{
+	struct module *mod;
+	char name[MODULE_NAME_LEN];
+	int ret, forced = 0;
+
+	if (!capable(CAP_SYS_MODULE) || modules_disabled)
+		return -EPERM;
+	//从用户空间获取模块名
+	if (strncpy_from_user(name, name_user, MODULE_NAME_LEN-1) &lt; 0)
+		return -EFAULT;
+	name[MODULE_NAME_LEN-1] = '\0';
+
+	audit_log_kern_module(name);
+
+	if (mutex_lock_interruptible(&amp;module_mutex) != 0)
+		return -EINTR;
+	//根据模块名查找模块
+	mod = find_module(name);
+	if (!mod) {
+		ret = -ENOENT;
+		goto out;
+	}
+
+	if (!list_empty(&amp;mod-&gt;source_list)) {
+		/* Other modules depend on us: get rid of them first. */
+		ret = -EWOULDBLOCK;
+		goto out;
+	}
+
+	/* Doing init or already dying? */
+	if (mod-&gt;state != MODULE_STATE_LIVE) {
+		/* FIXME: if (force), slam module count damn the torpedoes */
+		pr_debug(&quot;%s already dying\n&quot;, mod-&gt;name);
+		ret = -EBUSY;
+		goto out;
+	}
+
+	/* If it has an init func, it must have an exit func to unload */
+	if (mod-&gt;init &amp;&amp; !mod-&gt;exit) {
+		forced = try_force_unload(flags);
+		if (!forced) {
+			/* This module can't be removed */
+			ret = -EBUSY;
+			goto out;
+		}
+	}
+
+	/* Stop the machine so refcounts can't move and disable module. */
+	ret = try_stop_module(mod, flags, &amp;forced);
+	if (ret != 0)
+		goto out;
+
+	mutex_unlock(&amp;module_mutex);
+	/* Final destruction now no one is using it. */
+    /*执行退出函数*/
+	if (mod-&gt;exit != NULL)
+		mod-&gt;exit();
+	blocking_notifier_call_chain(&amp;module_notify_list,
+				     MODULE_STATE_GOING, mod);
+	klp_module_going(mod);
+	ftrace_release_mod(mod);
+
+	async_synchronize_full();
+
+	/* Store the name of the last unloaded module for diagnostic purposes */
+	strlcpy(last_unloaded_module, mod-&gt;name, sizeof(last_unloaded_module));
+
+	free_module(mod);
+	return 0;
+out:
+	mutex_unlock(&amp;module_mutex);
+	return ret;
+}
+</code></pre>
+<h3 id="从文件加载模块finish_module">从文件加载模块finish_module</h3>
+<pre><code class="language-c">SYSCALL_DEFINE3(finit_module, int, fd, const char __user *, uargs, int, flags)
+{
+	struct load_info info = { };
+	loff_t size;
+	void *hdr;
+	int err;
+
+	err = may_init_module();
+	if (err)
+		return err;
+
+	pr_debug(&quot;finit_module: fd=%d, uargs=%p, flags=%i\n&quot;, fd, uargs, flags);
+
+	if (flags &amp; ~(MODULE_INIT_IGNORE_MODVERSIONS
+		      |MODULE_INIT_IGNORE_VERMAGIC))
+		return -EINVAL;
+
+	err = kernel_read_file_from_fd(fd, &amp;hdr, &amp;size, INT_MAX,
+				       READING_MODULE);
+	if (err)
+		return err;
+	info.hdr = hdr;
+	info.len = size;
+	//检查，校验，分配空间，加载，连接模块等操作
+	return load_module(&amp;info, uargs, flags);
+}
+</code></pre>
+<h1 id="模块编程">模块编程</h1>
+<h2 id="相关函数宏">相关函数(宏)</h2>
+<h3 id="module_initx">module_init(x)</h3>
+<pre><code class="language-c">//以usb_init为例
+/**
+ * module_init() - driver initialization entry point
+ * @x: function to be run at kernel boot time or module insertion
+ *
+ * module_init() will either be called during do_initcalls() (if
+ * builtin) or at module insertion time (if a module).  There can only
+ * be one per module.
+ */
+#define module_init(x)	__initcall(x);
+
+#define __initcall(fn) device_initcall(fn)
+
+#define device_initcall(fn)		__define_initcall(fn, 6)
+
+#define __define_initcall(fn, id) ___define_initcall(fn, id, .initcall##id)
+
+#define ___define_initcall(fn, id, __sec) \
+	static initcall_t __initcall_##fn##id __used \
+		__attribute__((__section__(#__sec &quot;.init&quot;))) = fn;
+
+//可扩展宏
+#define ___define_initcall(fn,id,__sec)  \
+	static initcall_t __initcall_usb_init_6 __attribute__((__used__)) __attribute__((__section__( &quot;.initcall6&quot;&quot;.init&quot;))) = usb_init;
+</code></pre>
+<p>驱动初始化的入口，参数x就是在内核启动或者插入一个模块时会调用的函数.每个模块只能有一个module_init(x).</p>
+<p>将usb_init函数指针赋值给__initcall_usb_init_6，将该函数指针静态（<strong>used</strong>）的放到.initcall6.init输入段(<strong>section</strong>)</p>
+<pre><code class="language-c">typedef int (*initcall_t)(void);
+typedef initcall_t initcall_entry_t;
+</code></pre>
+<h3 id="module_exitx">module_exit(x)</h3>
+<pre><code class="language-c">/**
+ * module_exit() - driver exit entry point
+ * @x: function to be run when driver is removed
+ *
+ * module_exit() will wrap the driver clean-up code
+ * with cleanup_module() when used with rmmod when
+ * the driver is a module.  If the driver is statically
+ * compiled into the kernel, module_exit() has no effect.
+ * There can only be one per module.
+ */
+#define module_exit(x)	__exitcall(x);
+
+#define __exitcall(fn)						\
+/*
+	static exitcall_t __exitcall_usb_exit __used __section(.exitcall.exit)=usb_exit
+*/
+	static exitcall_t __exitcall_##fn __exit_call = fn 
+typedef void (*exitcall_t)(void);
+
+#define __exit_call	__used __section(.exitcall.exit)
+</code></pre>
+<p>驱动退出入口，参数X就是驱动被移除的时候运行的函数。当驱动作为一个模块插入函数的时候，module<strong>exit(x)会包含驱动清理代码（释放资源工作）;当模块被静态编译到内核的时候，这个函数不起作用。每个模块也只有一个module</strong>exit(x);</p>
+<p>将exit_exit函数指针赋值给静态变量__exitcall_usb_exit，并将其静态的放入到.exitcall.exit输入段</p>
+<h3 id="module_infotaginfo">MODULE_INFO(tag,info)</h3>
+<pre><code class="language-C">示例：license 宏
+/*
+ * The following license idents are currently accepted as indicating free
+ * software modules
+ *
+ *	&quot;GPL&quot;				[GNU Public License v2]
+ *	&quot;GPL v2&quot;			[GNU Public License v2]
+ *	&quot;GPL and additional rights&quot;	[GNU Public License v2 rights and more]
+ *	&quot;Dual BSD/GPL&quot;			[GNU Public License v2
+ *					 or BSD license choice]
+ *	&quot;Dual MIT/GPL&quot;			[GNU Public License v2
+ *					 or MIT license choice]
+ *	&quot;Dual MPL/GPL&quot;			[GNU Public License v2
+ *					 or Mozilla license choice]
+ *
+ * The following other idents are available
+ *
+ *	&quot;Proprietary&quot;			[Non free products]
+ *
+ * Both &quot;GPL v2&quot; and &quot;GPL&quot; (the latter also in dual licensed strings) are
+ * merely stating that the module is licensed under the GPL v2, but are not
+ * telling whether &quot;GPL v2 only&quot; or &quot;GPL v2 or later&quot;. The reason why there
+ * are two variants is a historic and failed attempt to convey more
+ * information in the MODULE_LICENSE string. For module loading the
+ * &quot;only/or later&quot; distinction is completely irrelevant and does neither
+ * replace the proper license identifiers in the corresponding source file
+ * nor amends them in any way. The sole purpose is to make the
+ * 'Proprietary' flagging work and to refuse to bind symbols which are
+ * exported with EXPORT_SYMBOL_GPL when a non free module is loaded.
+ *
+ * In the same way &quot;BSD&quot; is not a clear license information. It merely
+ * states, that the module is licensed under one of the compatible BSD
+ * license variants. The detailed and correct license information is again
+ * to be found in the corresponding source files.
+ *
+ * There are dual licensed components, but when running with Linux it is the
+ * GPL that is relevant so this is a non issue. Similarly LGPL linked with GPL
+ * is a GPL combined work.
+ *
+ * This exists for several reasons
+ * 1.	So modinfo can show license info for users wanting to vet their setup
+ *	is free
+ * 2.	So the community can ignore bug reports including proprietary modules
+ * 3.	So vendors can do likewise based on their own policies
+ */
+#define MODULE_LICENSE(_license) MODULE_INFO(license, _license) //&quot;GPL&quot;
+将license = “GPL”字符串放到__UNIQUE_ID_GPL0常量字符串数组中，然后将这个数组以1字节对齐(aligned(1))放到.modinfo段
+/* Generic info of form tag = &quot;info&quot; */
+#define MODULE_INFO(tag, info) __MODULE_INFO(tag, tag, info)
+
+#define __MODULE_INFO(tag, name, info)					  \
+static const char __UNIQUE_ID(name)[]					  \
+  __used __attribute__((section(&quot;.modinfo&quot;), unused, aligned(1)))	  \
+  = __MODULE_INFO_PREFIX __stringify(tag) &quot;=&quot; info
+/*
+*static const char __UNIQUE_ID_GPL0[] = &quot;license=GPL&quot;
+*/
+</code></pre>
+<h4 id="生成唯一的变量名">生成唯一的变量名</h4>
+<pre><code class="language-c">#define __UNIQUE_ID(prefix) __PASTE(__PASTE(__UNIQUE_ID_, prefix), __COUNTER__)
+
+#define ___PASTE(a,b) a##b
+#define __PASTE(a,b) ___PASTE(a,b)
+/*
+*This macro expands to sequential integral values starting from 0. In conjunction with the *## operator, this provides a convenient means to generate unique identifiers.
+*__COUNTER__会被展开为一个从0开始的整数，且每次调用后其值都会加一，这也就保证了其唯一性。
+*/
+ __COUNTER__
+__UNIQUE_ID(&quot;GPL&quot;) __UNIQUE_ID_GPL0 //假设第一次使用__COUNTER__宏
+</code></pre>
+<h4 id="字符串化">字符串化</h4>
+<pre><code class="language-c">/* Indirect stringification.  Doing two levels allows the parameter to be a
+ * macro itself.  For example, compile with -DFOO=bar, __stringify(FOO)
+ * converts to &quot;bar&quot;.
+ */
+//字符串化，它的功能就是把参数x转换成一个字符串
+#define __stringify_1(x...)	#x
+#define __stringify(x...)	__stringify_1(x)
+/*
+*这样写有什么好处呢？为什么不直接写成 #define __stringify(x) #x 这个形式呢？
+*
+*打个比方，如果有这样一个定义
+*
+*#define FOO bar
+*
+*那么如果是情况二的话，则会这样翻译
+*
+*__stringify(FOO)
+*-&gt;FOO
+*
+*如果是情况一呢，就会这样翻译
+*
+*__stringify(FOO)
+*-&gt;__stringify_1(bar)
+*-&gt;bar
+*
+*所以，这样定义的话，这个函数的使用，就可以使用表达式了，符合一般函数的调用习惯
+*/
+</code></pre>
+<h4 id="相关属性">相关属性</h4>
+<pre><code class="language-c">//aligned (alignment)
+指定变量或结构域的起始地址对齐（以字节为单位）
+aligned(1) //1字节对齐
+
+//used
+1、这个函数属性通知编译器在目标文件中保留一个静态函数，即使它没有被引用。
+2、标记为attribute__((used))的函数被标记在目标文件中，以避免链接器删除未使用的节。
+3、静态变量也可以标记为used，方法是使用 __attribute__((used))。
+4、例程
+static int lose_this(int);
+static int keep_this(int) __attribute__((used));     // retained in object file
+static int keep_this_too(int) __attribute__((used)); // retained in object file
+
+//unused
+表示该函数或变量可能不使用，这个属性可以避免编译器产生警告信息。
+
+//gcc 手册
+unused：This attribute, attached to a function, means that the function is meant to be
+        possibly unused. GCC will not produce a warning for this function.
+===============================================================================
+used： This attribute, attached to a function, means that code must be emitted for the
+       function even if it appears that the function is not referenced. This is useful,
+       for example, when the function is referenced only in inline assembly.
+</code></pre>
+<h3 id="module_paramnametypeperm">module_param(name,type,perm)</h3>
+<pre><code class="language-c">/**
+ * module_param - typesafe helper for a module/cmdline parameter
+ * @value: the variable to alter, and exposed parameter name.
+ * @type: the type of the parameter
+ * @perm: visibility in sysfs.
+ *
+ * @value becomes the module parameter, or (prefixed by KBUILD_MODNAME and a
+ * &quot;.&quot;) the kernel commandline parameter.  Note that - is changed to _, so
+ * the user can use &quot;foo-bar=1&quot; even for variable &quot;foo_bar&quot;.
+ *
+ * @perm is 0 if the the variable is not to appear in sysfs, or 0444
+ * for world-readable, 0644 for root-writable, etc.  Note that if it
+ * is writable, you may need to use kernel_param_lock() around
+ * accesses (esp. charp, which can be kfreed when it changes).
+ *
+ * The @type is simply pasted to refer to a param_ops_##type and a
+ * param_check_##type: for convenience many standard types are provided but
+ * you can create your own by defining those variables.
+ *
+ * Standard types are:
+ *	byte, short, ushort, int, uint, long, ulong
+ *	charp: a character pointer
+ *	bool: a bool, values 0/1, y/n, Y/N.
+ *	invbool: the above, only sense-reversed (N = true).
+ */
+module_param(nousb, bool, 0444);
+
+#define module_param(name, type, perm)				\
+	module_param_named(name, name, type, perm)
+</code></pre>
+<h4 id="module_param_namednamenametypeperm">module_param_named(name,name,type,perm)</h4>
+<pre><code class="language-c">/**
+ * module_param_named - typesafe helper for a renamed module/cmdline parameter
+ * @name: a valid C identifier which is the parameter name.
+ * @value: the actual lvalue to alter.
+ * @type: the type of the parameter
+ * @perm: visibility in sysfs.
+ *
+ * Usually it's a good idea to have variable names and user-exposed names the
+ * same, but that's harder if the variable must be non-static or is inside a
+ * structure.  This allows exposure under a different name.
+ */
+#define module_param_named(name, value, type, perm)			   \
+	param_check_##type(name, &amp;(value));				   \
+	module_param_cb(name, &amp;param_ops_##type, &amp;value, perm);		   \
+	__MODULE_PARM_TYPE(name, #type)
+</code></pre>
+<h4 id="类型检查">类型检查</h4>
+<pre><code class="language-c">param_check_##type(name, &amp;(value));
+--&gt;param_check_bool(nousb,&amp;bool);
+
+#define param_check_bool(name, p) __param_check(name, p, bool)
+--&gt; __param_check(nousb,&amp;bool,bool)
+    
+/* The macros to do compile-time type checking stolen from Jakub
+   Jelinek, who IIRC came up with this idea for the 2.4 module init code. */
+#define __param_check(name, p, type) \
+	static inline type __always_unused *__check_##name(void) { return(p); }
+--&gt;static inline bool __always_unused * __check_nousb(void) {return(&amp;bool);}
+
+#define __always_unused                 __attribute__((__unused__))
+</code></pre>
+<h4 id="回调函数">回调函数</h4>
+<pre><code class="language-c">module_param_cb(name, &amp;param_ops_##type, &amp;value, perm);
+--&gt;module_param_cb(nousb,&amp;param_ops_bool,&amp;nousb,0444);
+
+    /**
+ * module_param_cb - general callback for a module/cmdline parameter
+ * @name: a valid C identifier which is the parameter name.
+ * @ops: the set &amp; get operations for this parameter.
+ * @perm: visibility in sysfs.
+ *
+ * The ops can have NULL set or get functions.
+ */
+#define module_param_cb(name, ops, arg, perm)				      \
+	__module_param_call(MODULE_PARAM_PREFIX, name, ops, arg, perm, -1, 0)
+--&gt;__module_param_call(NULL,nousb,&amp;param_ops_bool,&amp;nousb,0444,-1,0)
+    
+/* This is the fundamental function for registering boot/module
+   parameters. */
+#define __module_param_call(prefix, name, ops, arg, perm, level, flags)	\
+	/* Default value instead of permissions? */			\
+	static const char __param_str_##name[] = prefix #name;		\
+	static struct kernel_param __moduleparam_const __param_##name	\
+	__used								\
+    __attribute__ ((unused,__section__ (&quot;__param&quot;),aligned(sizeof(void *)))) \
+	= { __param_str_##name, THIS_MODULE, ops,			\
+	    VERIFY_OCTAL_PERMISSIONS(perm), level, flags, { arg } }
+
+/*
+*static const char __param_str_nousb[] = &quot;nousb&quot;;
+*static struct kernel_param const __param_nousb __uesd __attribute__ ((unused,__section__ *(&quot;__param&quot;),aligned(sizeof(void *)))) =
+*{
+*	__param_str_nousb,
+*	THIS_MODULE,
+*	&amp;param_ops_bool,
+*	perm,
+*	-1,
+*	0,
+*	&amp;nousb
+*}
+*/
+
+//当前模块的module结构体指针
+extern struct module __this_module;
+#define THIS_MODULE (&amp;__this_module)
+
+/* Permissions on a sysfs file: you didn't miss the 0 prefix did you? */
+#define VERIFY_OCTAL_PERMISSIONS(perms)						\
+	(BUILD_BUG_ON_ZERO((perms) &lt; 0) +					\
+	 BUILD_BUG_ON_ZERO((perms) &gt; 0777) +					\
+	 /* USER_READABLE &gt;= GROUP_READABLE &gt;= OTHER_READABLE */		\
+	 BUILD_BUG_ON_ZERO((((perms) &gt;&gt; 6) &amp; 4) &lt; (((perms) &gt;&gt; 3) &amp; 4)) +	\
+	 BUILD_BUG_ON_ZERO((((perms) &gt;&gt; 3) &amp; 4) &lt; ((perms) &amp; 4)) +		\
+	 /* USER_WRITABLE &gt;= GROUP_WRITABLE */					\
+	 BUILD_BUG_ON_ZERO((((perms) &gt;&gt; 6) &amp; 2) &lt; (((perms) &gt;&gt; 3) &amp; 2)) +	\
+	 /* OTHER_WRITABLE?  Generally considered a bad idea. */		\
+	 BUILD_BUG_ON_ZERO((perms) &amp; 2) +					\
+	 (perms))
+
+/*
+ * Force a compilation error if condition is true, but also produce a
+ * result (of value 0 and type size_t), so the expression can be used
+ * e.g. in a structure initializer (or where-ever else comma expressions
+ * aren't permitted).
+ *强制条件检查，只有e=0/false ，编译才会成功
+ */
+#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:(-!!(e)); }))
+</code></pre>
+<h4 id="相关结构体">相关结构体</h4>
+<ul>
+<li>kernel_param结构体</li>
+</ul>
+<pre><code class="language-c">struct kernel_param {
+	const char *name;
+	struct module *mod;
+	const struct kernel_param_ops *ops;
+	const u16 perm;
+	s8 level;
+	u8 flags;
+	union {
+		void *arg;
+		const struct kparam_string *str;
+		const struct kparam_array *arr;
+	};
+};
+
+//内核参数成员函数
+struct kernel_param_ops {
+	/* How the ops should behave */
+	unsigned int flags;
+	/* Returns 0, or -errno.  arg is in kp-&gt;arg. */
+	int (*set)(const char *val, const struct kernel_param *kp);
+	/* Returns length written or -errno.  Buffer is 4k (ie. be short!) */
+	int (*get)(char *buffer, const struct kernel_param *kp);
+	/* Optional function to free kp-&gt;arg when module unloaded. */
+	void (*free)(void *arg);
+};
+
+/* Special one for strings we want to copy into */
+struct kparam_string {
+	unsigned int maxlen;
+	char *string;
+};
+
+/* Special one for arrays */
+struct kparam_array
+{
+	unsigned int max;
+	unsigned int elemsize;
+	unsigned int *num;
+	const struct kernel_param_ops *ops;
+	void *elem;
+};
+</code></pre>
+<ul>
+<li>module 结构体</li>
+</ul>
+<pre><code class="language-C">struct module {
+	enum module_state state;
+
+	/* Member of list of modules */
+	struct list_head list;
+
+	/* Unique handle for this module */
+	char name[MODULE_NAME_LEN];
+
+	/* Sysfs stuff. */
+	struct module_kobject mkobj;
+	struct module_attribute *modinfo_attrs;
+	const char *version;
+	const char *srcversion;
+	struct kobject *holders_dir;
+
+	/* Exported symbols */
+	const struct kernel_symbol *syms;
+	const s32 *crcs;
+	unsigned int num_syms;
+
+	/* Kernel parameters. */
+#ifdef CONFIG_SYSFS
+	struct mutex param_lock;
+#endif
+	struct kernel_param *kp;
+	unsigned int num_kp;
+
+	/* GPL-only exported symbols. */
+	unsigned int num_gpl_syms;
+	const struct kernel_symbol *gpl_syms;
+	const s32 *gpl_crcs;
+
+#ifdef CONFIG_UNUSED_SYMBOLS
+	/* unused exported symbols. */
+	const struct kernel_symbol *unused_syms;
+	const s32 *unused_crcs;
+	unsigned int num_unused_syms;
+
+	/* GPL-only, unused exported symbols. */
+	unsigned int num_unused_gpl_syms;
+	const struct kernel_symbol *unused_gpl_syms;
+	const s32 *unused_gpl_crcs;
+#endif
+
+#ifdef CONFIG_MODULE_SIG
+	/* Signature was verified. */
+	bool sig_ok;
+#endif
+
+	bool async_probe_requested;
+
+	/* symbols that will be GPL-only in the near future. */
+	const struct kernel_symbol *gpl_future_syms;
+	const s32 *gpl_future_crcs;
+	unsigned int num_gpl_future_syms;
+
+	/* Exception table */
+	unsigned int num_exentries;
+	struct exception_table_entry *extable;
+
+	/* Startup function. */
+	int (*init)(void);
+
+	/* Core layout: rbtree is accessed frequently, so keep together. */
+	struct module_layout core_layout __module_layout_align;
+	struct module_layout init_layout;
+
+	/* Arch-specific module values */
+	struct mod_arch_specific arch;
+
+	unsigned long taints;	/* same bits as kernel:taint_flags */
+
+#ifdef CONFIG_GENERIC_BUG
+	/* Support for BUG */
+	unsigned num_bugs;
+	struct list_head bug_list;
+	struct bug_entry *bug_table;
+#endif
+
+#ifdef CONFIG_KALLSYMS
+	/* Protected by RCU and/or module_mutex: use rcu_dereference() */
+	struct mod_kallsyms *kallsyms;
+	struct mod_kallsyms core_kallsyms;
+
+	/* Section attributes */
+	struct module_sect_attrs *sect_attrs;
+
+	/* Notes attributes */
+	struct module_notes_attrs *notes_attrs;
+#endif
+
+	/* The command line arguments (may be mangled).  People like
+	   keeping pointers to this stuff */
+	char *args;
+
+#ifdef CONFIG_SMP
+	/* Per-cpu data. */
+	void __percpu *percpu;
+	unsigned int percpu_size;
+#endif
+
+#ifdef CONFIG_TRACEPOINTS
+	unsigned int num_tracepoints;
+	tracepoint_ptr_t *tracepoints_ptrs;
+#endif
+#ifdef CONFIG_TREE_SRCU
+	unsigned int num_srcu_structs;
+	struct srcu_struct **srcu_struct_ptrs;
+#endif
+#ifdef CONFIG_BPF_EVENTS
+	unsigned int num_bpf_raw_events;
+	struct bpf_raw_event_map *bpf_raw_events;
+#endif
+#ifdef CONFIG_JUMP_LABEL
+	struct jump_entry *jump_entries;
+	unsigned int num_jump_entries;
+#endif
+#ifdef CONFIG_TRACING
+	unsigned int num_trace_bprintk_fmt;
+	const char **trace_bprintk_fmt_start;
+#endif
+#ifdef CONFIG_EVENT_TRACING
+	struct trace_event_call **trace_events;
+	unsigned int num_trace_events;
+	struct trace_eval_map **trace_evals;
+	unsigned int num_trace_evals;
+#endif
+#ifdef CONFIG_FTRACE_MCOUNT_RECORD
+	unsigned int num_ftrace_callsites;
+	unsigned long *ftrace_callsites;
+#endif
+
+#ifdef CONFIG_LIVEPATCH
+	bool klp; /* Is this a livepatch module? */
+	bool klp_alive;
+
+	/* Elf information */
+	struct klp_modinfo *klp_info;
+#endif
+
+#ifdef CONFIG_MODULE_UNLOAD
+	/* What modules depend on me? */
+	struct list_head source_list;
+	/* What modules do I depend on? */
+	struct list_head target_list;
+
+	/* Destruction function. */
+	void (*exit)(void);
+
+	atomic_t refcnt;
+#endif
+
+#ifdef CONFIG_CONSTRUCTORS
+	/* Constructor functions. */
+	ctor_fn_t *ctors;
+	unsigned int num_ctors;
+#endif
+
+#ifdef CONFIG_FUNCTION_ERROR_INJECTION
+	struct error_injection_entry *ei_funcs;
+	unsigned int num_ei_funcs;
+#endif
+}____cacheline_aligned __randomize_layout;
+</code></pre>
+<h4 id="参数类型信息">参数类型信息</h4>
+<pre><code class="language-c">// __MODULE_PARM_TYPE(nousb,bool)
+#define __MODULE_PARM_TYPE(name, _type)					  \
+  __MODULE_INFO(parmtype, name##type, #name &quot;:&quot; _type)
+---&gt;__MODULE_INFO(parmtype,nametype,&quot;nousb:bool&quot;)
+---&gt;static const char __UNIQUE_ID_nametype1[] = &quot;parmtype=nousb:bool&quot;  //假设counter=1
+</code></pre>
+<h2 id="模块编程-2">模块编程</h2>
+<h3 id="模块组成">模块组成</h3>
+<p>• 头文件</p>
+<p>#include &lt;linux/module.h&gt;<br>
+#include &lt;linux/init.h&gt;</p>
+<p>• 模块函数</p>
+<p>module_init()<br>
+module_exit()</p>
+<p>• 模块许可</p>
+<p>MODULE_LICENSE(&quot;Dual BSD/GPL&quot;);<br>
+MODULE_LICENSE(&quot;GPL&quot;);<br>
+MODULE_LICENSE(&quot;BSD/GPL&quot;);</p>
+<p>• 模块描述</p>
+<p>MODULE_AUTHOR(author);<br>
+MODULE_DESCRIPTION(description);<br>
+MODULE_VERSION(version_string);</p>
+<p>• 模块导出符号（可以给其他模块调用）</p>
+<p>EXPORT_SYMBOL( )<br>
+EXPORT_SYMBOL_GPL( )</p>
+<p>• 模块参数</p>
+<p>普通变量传递参数变量：</p>
+<pre><code>module_param(name, type, perm);
+其中,name:表示参数的变量名字;
+   type:表示参数的变量类型;
+   perm:表示参数的访问权限;
+</code></pre>
+<p>数组类型模块参数的定义:</p>
+<pre><code>用逗号间隔的列表提供的值;
+声明一个数组参数:
+module_param_array(name, type, num, perm);
+其中,name:表示数组的名字;
+   type:表示数组元素的类型;
+   num :存放传入参数元素数量，使用时候这里要写一个变量的地址。
+   perm:表示参数的访问权限;
+  ======================================================
+
+type支持的基本类型有:
+bool  :布尔类型  真--非0   
+invbool :颠倒了值的bool类型;
+charp  :字符指针类型,内存为用户提供的字符串分配;(char *)
+int   :整型
+long  :长整型
+short  :短整型
+uint  :无符号整型（unsigned int）
+ulong  :无符号长整型（unsigned long）
+ushort :无符号短整型（unsigned short）
+=========================================================
+
+perm表示该参数在sysfs文件系统中所对应的文件节点的属性;你用该使用&lt;linux/stat.h&gt;中定义的权限值;这个值控制谁可以存取这些模块参数在sysfs文件系统中的表示;当perm为0时,表示此参数不存在sysfs文件系统下对应的文件节点;否则,模块被加载后,会出现 /sys/module/模块名/parameters/参数名 这类文件 ,带有给定的权限，比如:
+\#define S_IRWXU 00700
+\#define S_IRUSR  00400
+\#define S_IWUSR 00200
+\#define S_IXUSR 00100
+\#define S_IRWXG 00070
+\#define S_IRGRP 00040
+\#define S_IWGRP 00020
+\#define S_IXGRP 00010
+\#define S_IRWXO 00007
+\#define S_IROTH 00004
+\#define S_IWOTH 00002
+\#define S_IXOTH 00001
+</code></pre>
+<h3 id="示例代码">示例代码</h3>
+<pre><code class="language-c">#include &lt;linux/module.h&gt;      
+#include &lt;linux/init.h&gt;      
+
+static int  age  =25;     
+static int  arr[10]={1,2,3,4,5,6,7,8,9,10};    
+static int  num;
+
+//S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH 表示age文件权限        644 （只有用户有写权限）
+module_param(age, int, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+
+//S_IRGRP|S_IROTH 表示arr文件权限444(都是读权限)
+module_param_array(arr, int, &amp;num, S_IRUSR|S_IRGRP|S_IROTH);
+
+static int __init par_init(void)  
+{
+	int i;
+	printk(&quot;num=%d\r\n&quot;,num);
+	printk(&quot;arg=%d\r\n&quot;,age);
+	printk(&quot;arr:&quot;);
+	for(i=0;i&lt;10;i++){
+		printk(&quot;%d &quot;,arr[i]);
+	}
+	printk(&quot;\r\n&quot;);	
+	return 0;
+}
+
+static void  __exit par_exit(void)  
+{
+}
+
+module_init(par_init);
+module_exit(par_exit);
+MODULE_LICENSE(&quot;Dual BSD/GPL&quot;);   
+MODULE_AUTHOR(&quot;letcos&quot;);           
+MODULE_DESCRIPTION(&quot;STUDY_MODULE&quot;);  
+MODULE_VERSION(&quot;v1.0&quot;);
+</code></pre>
+<p>测试过程：</p>
+<pre><code>//使用默认参数安装模块
+[root@localhost home]# insmod par.ko 
+[ 6395.815000] arg=25
+[ 6395.815000] arr:1 2 3 4 5 6 7 8 9 10 
+   //查看参数节点属性和对应值
+[root@localhost home]# ls /sys/module/par/parameters/
+age  arr
+[root@localhost home]# ls /sys/module/par/parameters/ -l
+total 0
+-rw-r--r--    1 root     root          4096 Jan  1 19:57 age
+-r--r--r--    1 root     root          4096 Jan  1 19:57 arr
+[root@localhost home]# cat /sys/module/par/parameters/age 
+25
+    //修改参数值
+[root@localhost home]# echo 23 &gt; /sys/module/par/parameters/age
+[root@localhost home]# cat /sys/module/par/parameters/age 
+23
+[root@localhost home]# cat /sys/module/par/parameters/arr 
+    //卸载模块
+[root@localhost home]# rmmod par.ko 
+    //带参数安装模块
+[root@localhost home]# insmod par.ko age=78  arr=12,13,14,15,16
+[ 6517.860000] arg=78
+[ 6517.860000] arr:12 13 14 15 16 6 7 8 9 10 
+[root@localhost home]# ls /sys/module/par/parameters/ -l
+total 0
+-rw-r--r--    1 root     root          4096 Jan  1 19:59 age
+-r--r--r--    1 root     root          4096 Jan  1 19:59 arr
+[root@localhost home]# cat /sys/module/par/parameters/age 
+78
+[root@localhost home]# echo 23 &gt; /sys/module/par/parameters/age
+[root@localhost home]# cat /sys/module/par/parameters/age 
+23
+[root@localhost home]# cat /sys/module/par/parameters/arr 
+12,13,14,15,16
+[root@localhost home]#
+</code></pre>
+<h2 id="编译模块">编译模块</h2>
+<h3 id="单独编译模块">单独编译模块</h3>
+<pre><code class="language-shell">#shell
+SHELL := /bin/zsh
+
+#module name
+NAME=&quot;touch_sensor&quot;
+
+obj-m += $(NAME).o
+
+#kernel source path
+KDIR=~/kernel
+
+#rootfs path
+RDIR=~/rootfs/home
+
+modules:
+        @make -C $(KDIR) M=$(PWD)  modules
+        @rm -rf .tmp_versions .*.ko.cmd .*.o.cmd modules.order  Module.symvers *.mod.c *.o 
+        
+#if you can use adb ,push to target board
+        adb root
+        sleep 2
+        adb push $(NAME).ko data
+        adb shell
+
+#if you cna use nfs,push to rootfs
+        cp $(NAME).ko $(RDIR)
+clean:
+        @rm -rf  *.ko
+</code></pre>
+<h3 id="多文件模块编译">多文件模块编译</h3>
+<p>当一个很复杂的设备驱动，一般可以把它多个c文件实现，但是最终编译出来只有一个ko文件。多个C文件中只能有一个文件是模块形式编写的，其他的C文件都普通C代码形式实现。</p>
+<p>建议不管是单文件单模块或多文件单模块都使用这个Makefile写法。下面是图示</p>
+<figure data-type="image" tabindex="1"><img src="https://e.coding.net/letcos/Blog.git/post-images/1591029382347.png" alt="" loading="lazy"></figure>
+<h1 id="模块启动与初始化">模块启动与初始化</h1>
+<h2 id="启动时调用-do_initcalls">启动时调用 do_initcalls()</h2>
+<pre><code class="language-c">//内核启动
+start_kernel(void)
+---&gt;static void __init do_initcalls(void)
+static void __init do_initcalls(void)
+{
+	int level;
+	//依次执行前8个initcall初始化段的函数
+	for (level = 0; level &lt; ARRAY_SIZE(initcall_levels) - 1; level++)
+		do_initcall_level(level);
+}
+---&gt;static void __init do_initcall_level(int level)
+
+static void __init do_initcall_level(int level)
+{
+	initcall_entry_t *fn;
+
+	strcpy(initcall_command_line, saved_command_line);
+	parse_args(initcall_level_names[level],
+		   initcall_command_line, __start___param,
+		   __stop___param - __start___param,
+		   level, level,
+		   NULL, &amp;repair_env_string);
+
+	trace_initcall_level(initcall_level_names[level]);
+	//执行该level段下的所有初始化函数
+	for (fn = initcall_levels[level]; fn &lt; initcall_levels[level+1]; fn++)
+		do_one_initcall(initcall_from_entry(fn));
+}
+---&gt;int __init_or_module do_one_initcall(initcall_t fn)
+int __init_or_module do_one_initcall(initcall_t fn)
+{
+	int count = preempt_count();
+	char msgbuf[64];
+	int ret;
+
+	if (initcall_blacklisted(fn))
+		return -EPERM;
+
+	do_trace_initcall_start(fn);
+    //执行初始化函数
+	ret = fn();
+	do_trace_initcall_finish(fn, ret);
+
+	msgbuf[0] = 0;
+
+	if (preempt_count() != count) {
+		sprintf(msgbuf, &quot;preemption imbalance &quot;);
+		preempt_count_set(count);
+	}
+	if (irqs_disabled()) {
+		strlcat(msgbuf, &quot;disabled interrupts &quot;, sizeof(msgbuf));
+		local_irq_enable();
+	}
+	WARN(msgbuf[0], &quot;initcall %pS returned with %s\n&quot;, fn, msgbuf);
+
+	add_latent_entropy();
+	return ret;
+}
+</code></pre>
+<h2 id="加载时调用-do_one_initcall">加载时调用 do_one_initcall()</h2>
+<pre><code class="language-c">int __init_or_module do_one_initcall(initcall_t fn)
+{
+	int count = preempt_count();
+	char msgbuf[64];
+	int ret;
+
+	if (initcall_blacklisted(fn))
+		return -EPERM;
+
+	do_trace_initcall_start(fn);
+    //执行初始化函数
+	ret = fn();
+	do_trace_initcall_finish(fn, ret);
+
+	msgbuf[0] = 0;
+
+	if (preempt_count() != count) {
+		sprintf(msgbuf, &quot;preemption imbalance &quot;);
+		preempt_count_set(count);
+	}
+	if (irqs_disabled()) {
+		strlcat(msgbuf, &quot;disabled interrupts &quot;, sizeof(msgbuf));
+		local_irq_enable();
+	}
+	WARN(msgbuf[0], &quot;initcall %pS returned with %s\n&quot;, fn, msgbuf);
+
+	add_latent_entropy();
+	return ret;
+}
+</code></pre>
+<h2 id="修改模块的加载顺序">修改模块的加载顺序</h2>
+<h3 id="内核模块加载顺序">内核模块加载顺序</h3>
+<p>Linux内核为不同驱动的加载顺序对应不同的优先级，定义了一些宏： include\linux\init.h</p>
+<pre><code class="language-c">#define pure_initcall(fn) __define_initcall(&quot;0&quot;,fn,1)
+
+#define core_initcall(fn) __define_initcall(&quot;1&quot;,fn,1) 
+#define core_initcall_sync(fn) __define_initcall(&quot;1s&quot;,fn,1s) 
+#define postcore_initcall(fn) __define_initcall(&quot;2&quot;,fn,2) 
+#define postcore_initcall_sync(fn) __define_initcall(&quot;2s&quot;,fn,2s) 
+#define arch_initcall(fn) __define_initcall(&quot;3&quot;,fn,3) 
+#define arch_initcall_sync(fn) __define_initcall(&quot;3s&quot;,fn,3s) 
+#define subsys_initcall(fn) __define_initcall(&quot;4&quot;,fn,4) 
+#define subsys_initcall_sync(fn) __define_initcall(&quot;4s&quot;,fn,4s) 
+#define fs_initcall(fn) __define_initcall(&quot;5&quot;,fn,5) 
+#define fs_initcall_sync(fn) __define_initcall(&quot;5s&quot;,fn,5s) 
+#define rootfs_initcall(fn) __define_initcall(&quot;rootfs&quot;,fn,rootfs) 
+#define device_initcall(fn) __define_initcall(&quot;6&quot;,fn,6) 
+#define device_initcall_sync(fn) __define_initcall(&quot;6s&quot;,fn,6s) 
+#define late_initcall(fn) __define_initcall(&quot;7&quot;,fn,7) 
+#define late_initcall_sync(fn) __define_initcall(&quot;7s&quot;,fn,7s)
+
+#define __initcall(fn) device_initcall(fn)
+</code></pre>
+<p>把自己的驱动的函数名用这些宏去定义之后， 就会对应不同的加载时候的优先级。其中，我们写驱动中所用到的module_init对应的是</p>
+<pre><code class="language-c">#define module_init(x) __initcall(x);
+#define __initcall(fn) device_initcall(fn) 
+</code></pre>
+<p>所以，驱动对应的加载的优先级为6</p>
+<p>在上面的不同的优先级中， 数字越小，优先级越高。 同一等级的优先级的驱动，加载顺序是链接过程决定的，结果是不确定的，我们无法去手动设置谁先谁后。 不同等级的驱动加载的顺序是先优先级高，后优先级低，这是可以确定的。</p>
+<h3 id="修改加载顺序">修改加载顺序</h3>
+<p>对于以下两个驱动模块加载，他们优先级都为6；加载顺序不确定，由链接程序确定。</p>
+<pre><code>module_init(as352x_afe_init); 
+module_init(enc28j60_init);
+</code></pre>
+<p>如果要改变改变（确定）两者初始化的顺序，可以使用以下三种方法：</p>
+<p>a.将其中一个设备驱动初始化提高一个优先级到5；使用</p>
+<pre><code>fs_initcall(as352x_afe_init)；
+</code></pre>
+<p>b.将其中一个设备驱动初始化降低一个优先级到7；使用</p>
+<pre><code>late_initcall(enc28j60_init)；
+</code></pre>
+<p>c.新建一个初始化优先级，单独新建一个初始化段</p>
+<p>步骤如下：</p>
+<p>1.新建一个优先级</p>
+<pre><code class="language-c">include\linux\init.h中：
+
+#define pure_initcall(fn) __define_initcall(&quot;0&quot;,fn,1)
+
+#define core_initcall(fn) __define_initcall(&quot;1&quot;,fn,1) 
+#define core_initcall_sync(fn) __define_initcall(&quot;1s&quot;,fn,1s) 
+#define postcore_initcall(fn) __define_initcall(&quot;2&quot;,fn,2) 
+#define postcore_initcall_sync(fn) __define_initcall(&quot;2s&quot;,fn,2s) 
+#define arch_initcall(fn) __define_initcall(&quot;3&quot;,fn,3) 
+#define arch_initcall_sync(fn) __define_initcall(&quot;3s&quot;,fn,3s) 
+#define subsys_initcall(fn) __define_initcall(&quot;4&quot;,fn,4) 
+#define subsys_initcall_sync(fn) __define_initcall(&quot;4s&quot;,fn,4s) 
+#define fs_initcall(fn) __define_initcall(&quot;5&quot;,fn,5) 
+#define fs_initcall_sync(fn) __define_initcall(&quot;5s&quot;,fn,5s) 
+#define rootfs_initcall(fn) __define_initcall(&quot;rootfs&quot;,fn,rootfs) 
+#if 1 
+#define prev_device_initcall(fn) __define_initcall(&quot;6&quot;,fn,6)          //新建prev_device_initcall初始化段
+#define prev_device_initcall_sync(fn) __define_initcall(&quot;6s&quot;,fn,6s) 
+#define device_initcall(fn) __define_initcall(&quot;7&quot;,fn,7) 
+#define device_initcall_sync(fn) __define_initcall(&quot;7s&quot;,fn,7s) 
+#define late_initcall(fn) __define_initcall(&quot;8&quot;,fn,8) 
+#define late_initcall_sync(fn) __define_initcall(&quot;8s&quot;,fn,8s)
+
+#else 
+#define device_initcall(fn) __define_initcall(&quot;6&quot;,fn,6) 
+#define device_initcall_sync(fn) __define_initcall(&quot;6s&quot;,fn,6s) 
+#define late_initcall(fn) __define_initcall(&quot;7&quot;,fn,7) 
+#define late_initcall_sync(fn) __define_initcall(&quot;7s&quot;,fn,7s) 
+#endif
+</code></pre>
+<p>2.用对应新的宏，定义我们的驱动：</p>
+<pre><code class="language-c">prev_device_initcall(as352x_afe_init);
+</code></pre>
+<p>3.在对应的链接文件中把宏加进去</p>
+<pre><code class="language-c">include\asm-generic\vmlinux.lds.h  //具体链接脚本与板子有关
+    
+#if 1 
+#define INITCALLS \ 
+*(.initcall0.init) \ 
+*(.initcall0s.init) \ 
+*(.initcall1.init) \ 
+*(.initcall1s.init) \ 
+*(.initcall2.init) \ 
+*(.initcall2s.init) \ 
+*(.initcall3.init) \ 
+*(.initcall3s.init) \ 
+*(.initcall4.init) \ 
+*(.initcall4s.init) \ 
+*(.initcall5.init) \ 
+*(.initcall5s.init) \ 
+*(.initcallrootfs.init) \ 
+*(.initcall6.init) \ 
+*(.initcall6s.init) \ 
+*(.initcall7.init) \ 
+*(.initcall7s.init) \ 
+*(.initcall8.init) \ 
+*(.initcall8s.init)
+
+#else
+
+#define INITCALLS \ 
+*(.initcall0.init) \ 
+*(.initcall0s.init) \ 
+*(.initcall1.init) \ 
+*(.initcall1s.init) \ 
+*(.initcall2.init) \ 
+*(.initcall2s.init) \ 
+*(.initcall3.init) \ 
+*(.initcall3s.init) \ 
+*(.initcall4.init) \ 
+*(.initcall4s.init) \ 
+*(.initcall5.init) \ 
+*(.initcall5s.init) \ 
+*(.initcallrootfs.init) \ 
+*(.initcall6.init) \ 
+*(.initcall6s.init) \ 
+*(.initcall7.init) \ 
+*(.initcall7s.init)
+
+#endif 
+</code></pre>
+<p>4.编译运行即可修改模块注册顺序</p>
+<h1 id="总结">总结</h1>
+<figure data-type="image" tabindex="2"><img src="https://e.coding.net/letcos/Blog.git/post-images/1591029405322.png" alt="" loading="lazy"></figure>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://e.coding.net/letcos/Blog.git/tag/BGIaIHBjv/" class="tag">
+                    Android
+                  </a>
+                
+              </div>
+            
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
